@@ -2,17 +2,20 @@
 (function () {
   'use strict';
   var IDS = {
-    stremio: 'IkWsFHtOY9.Stremio', netflix: 'org.tizen.netflix-app',
-    disneyplus: 'MCmYXNxgcu.DisneyPlus', youtube: '9Ur5IzDKqV.TizenYouTube',
-    appletv: 'com.samsung.tv.aria-video', primevideo: 'org.tizen.primevideo',
-    abciview: 'mWK87Xghap.ABCiview', sbs: 'OyE7OuxlUi.SBSOnDemand',
-    applemusic: 'org.tizen.apple.apple-music'
+    netflix: 'org.tizen.netflix-app', primevideo: 'org.tizen.primevideo',
+    hbomax: '5b8c3eb16b.BeamCTVDev', youtube: '9Ur5IzDKqV.TizenYouTube',
+    disneyplus: 'MCmYXNxgcu.DisneyPlus', appletv: 'com.samsung.tv.aria-video',
+    applemusic: 'org.tizen.apple.apple-music', stremio: 'IkWsFHtOY9.Stremio'
   };
-  var STREAMING = ['as6cYRgkPy.Binge', '73iTZRTc34.Stan', '5b8c3eb16b.BeamCTVDev',
-    'KaLitts8bq.tenplaySamsungTizen', 'eYuOiOLYQX.KayoSports', 'Ne2ZsPWdKl.9NOW',
-    '3KA0pm7a7V.TubiTV', 'rJeHak5zRg.Spotify', 'icp4AvUPiA.7plus'];
+  // Installed IDs differ between TV generations and regions, so primary apps also match by name.
+  var NAMES = {
+    netflix: /^netflix$/i, primevideo: /^(amazon )?prime video$/i, hbomax: /^(hbo ?max|max)$/i,
+    videoland: /^videoland$/i, youtube: /^youtube$/i, disneyplus: /^disney ?\+$/i,
+    appletv: /^apple tv$/i, applemusic: /^apple music$/i, stremio: /^stremio$/i
+  };
+  var STREAMING = ['3KA0pm7a7V.TubiTV', 'rJeHak5zRg.Spotify'];
   var CONSUMER_SYSTEM = ['org.tizen.browser', 'com.microsoft.copilot'];
-  var EXTRA_BRANDS = {'rJeHak5zRg.Spotify': 'spotify', '5b8c3eb16b.BeamCTVDev': 'hbomax', '3KA0pm7a7V.TubiTV': 'tubi'};
+  var EXTRA_BRANDS = {'rJeHak5zRg.Spotify': 'spotify', '3KA0pm7a7V.TubiTV': 'tubi'};
   var INTERNAL = ['adplatform.ADPlayer', 'WykOS4t4F0.cmsWebApp', '25emanual3.emanual',
     'ZODRT12q2l.WebAccountExtension', 'ByJlgt0XeD.CastSettingsApp', 'tv6pbVMQFF.PrivacyChoices'];
   var SELF = 'nClrkHome1.FrameHome';
@@ -38,15 +41,6 @@
     if (!IDS[brand]) { done({message: 'This app has no launch target.'}); return; }
     launchApp(IDS[brand], done);
   }
-  function art(done) {
-    if (!api()) { unavailable(done); return; }
-    var finish = bounded(done);
-    try {
-      var data = [new tizen.ApplicationControlData('mode', ['fullscreen']), new tizen.ApplicationControlData('requester', ['mobile'])];
-      var control = new tizen.ApplicationControl('http://tizen.org/appcontrol/operation/default', null, null, null, data);
-      api().launchAppControl(control, 'org.tizen.art-app', function () { finish(null); }, function (err) { finish(failure(err)); });
-    } catch (err) { finish(failure(err)); }
-  }
   function home(done) { launchApp('com.samsung.tv.csfs', done); }
   function settings(done) { launchApp('com.samsung.tv.coba.setting', done); }
   function apps(done) {
@@ -54,8 +48,13 @@
     var finish = bounded(done);
     try {
       api().getAppsInfo(function (list) {
-        var known = {}, seen = {}, result = [];
+        var known = {}, seen = {}, result = [], brands = Object.keys(NAMES);
         Object.keys(IDS).forEach(function (brand) { known[IDS[brand]] = brand; });
+        list.forEach(function (a) {
+          if (!known[a.id] && a.show && a.name && a.id !== 'com.samsung.tv.cobalt-yt') {
+            brands.some(function (brand) { if (NAMES[brand].test(String(a.name).trim())) { known[a.id] = brand; return true; } return false; });
+          }
+        });
         list.forEach(function (a) {
           var primary = !!known[a.id], stream = STREAMING.indexOf(a.id) >= 0;
           var consumer = /^[A-Za-z0-9]{10}\.[A-Za-z0-9_-]+$/.test(a.id) || CONSUMER_SYSTEM.indexOf(a.id) >= 0;
@@ -63,12 +62,12 @@
           if (!primary && /(?:service|worker|preview|promotion|plugin|launcher|test|sdk|^ep[ -]|factory|daemon)/i.test(a.name + ' ' + a.id)) return;
           if (/-dummy$/.test(a.id) || a.id === 'com.samsung.tv.cobalt-yt') return;
           seen[a.id] = true;
-          result.push({ appId: a.id, name: a.name, brand: known[a.id] || EXTRA_BRANDS[a.id] || '', icon: a.iconPath || '', rank: primary ? Object.keys(IDS).indexOf(known[a.id]) : (stream ? 20 : 30) });
+          result.push({ appId: a.id, name: a.name, brand: known[a.id] || EXTRA_BRANDS[a.id] || '', icon: a.iconPath || '', rank: primary ? brands.indexOf(known[a.id]) + (IDS[known[a.id]] === a.id ? 0 : 0.5) : (stream ? 20 : 30) });
         });
         result.sort(function (a, b) { return a.rank - b.rank || a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
         finish(null, result);
       }, function (err) { finish(failure(err)); });
     } catch (err) { finish(failure(err)); }
   }
-  window.FrameDevice = { launch: launch, launchApp: launchApp, art: art, home: home, settings: settings, apps: apps };
+  window.FrameDevice = { launch: launch, launchApp: launchApp, home: home, settings: settings, apps: apps };
 }());

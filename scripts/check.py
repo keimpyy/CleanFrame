@@ -29,6 +29,9 @@ for filename in ['index.html']:
         if filename.endswith('.js'):
             assert reference.startswith(('./', '../')), 'Module imports must be relative paths'
 for css in app.rglob('*.css'):
+    # The 2018 TV's browser predates flexbox gap and the inset shorthand.
+    unsupported = re.findall(r'(?<![-\w])(gap|inset)\s*:', css.read_text())
+    assert not unsupported, 'Tizen 4.0 cannot use ' + ', '.join(sorted(set(unsupported))) + ' in ' + css.name
     for reference in re.findall(r'url\([\"\']?([^\)\"\']+)', css.read_text()):
         if ':' not in reference:
             assert (css.parent / reference.split('?')[0]).is_file(), 'Missing CSS resource: ' + reference
@@ -41,6 +44,6 @@ for wall in walls:
     for suffix in ['study-soft', 'field-blur', 'field-frost', 'field-clear']:
         assert (app / ('assets/materials/' + wall_id + '-' + suffix + '.jpg')).is_file(), 'Missing registered material: ' + wall_id + '/' + suffix
     assert (app / ('assets/wallpapers/' + wall_id + '-panel.jpg')).is_file(), 'Missing panel backdrop: ' + wall_id
-for icon in ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic', 'art', 'apps', 'settings']:
+for icon in ['netflix', 'primevideo', 'hbomax', 'youtube', 'disneyplus', 'appletv', 'applemusic', 'stremio', 'apps', 'settings']:
     assert (app / ('assets/icons/' + icon + '.svg')).is_file(), 'Missing icon: ' + icon
 print('Widget identity, version and bundled resources are valid.')
