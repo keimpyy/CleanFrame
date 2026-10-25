@@ -16,9 +16,9 @@
   /* Launch IDs are starting points; discovery on the TV replaces them with the installed IDs. */
   var PRIMARY_APPS = [
     { id: 'netflix', name: 'Netflix', mark: true, appId: 'org.tizen.netflix-app' },
-    { id: 'primevideo', name: 'Prime Video', mark: true, appId: 'org.tizen.primevideo' },
-    { id: 'hbomax', name: 'HBO Max', mark: true, appId: '5b8c3eb16b.BeamCTVDev' },
-    { id: 'videoland', name: 'Videoland', mark: false, appId: '' },
+    { id: 'primevideo', name: 'Prime Video', mark: true, appId: 'evKhCgZelL.AmazonIgnitionLauncher2' },
+    { id: 'hbomax', name: 'HBO Max', mark: true, appId: 'fjpfQryJuR.HBOMaxCTV' },
+    { id: 'videoland', name: 'Videoland', mark: false, appId: 'WyN2wsAQHK.VideolandV2' },
     { id: 'youtube', name: 'YouTube', mark: true, appId: '9Ur5IzDKqV.TizenYouTube' },
     { id: 'disneyplus', name: 'Disney+', mark: true, appId: 'MCmYXNxgcu.DisneyPlus' },
     { id: 'appletv', name: 'Apple TV', mark: true, appId: 'com.samsung.tv.aria-video' },

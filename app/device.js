@@ -2,8 +2,8 @@
 (function () {
   'use strict';
   var IDS = {
-    netflix: 'org.tizen.netflix-app', primevideo: 'org.tizen.primevideo',
-    hbomax: '5b8c3eb16b.BeamCTVDev', youtube: '9Ur5IzDKqV.TizenYouTube',
+    netflix: 'org.tizen.netflix-app', primevideo: 'evKhCgZelL.AmazonIgnitionLauncher2',
+    hbomax: 'fjpfQryJuR.HBOMaxCTV', videoland: 'WyN2wsAQHK.VideolandV2', youtube: '9Ur5IzDKqV.TizenYouTube',
     disneyplus: 'MCmYXNxgcu.DisneyPlus', appletv: 'com.samsung.tv.aria-video',
     applemusic: 'org.tizen.apple.apple-music', stremio: 'IkWsFHtOY9.Stremio'
   };
@@ -18,7 +18,7 @@
   var EXTRA_BRANDS = {'rJeHak5zRg.Spotify': 'spotify', '3KA0pm7a7V.TubiTV': 'tubi'};
   var INTERNAL = ['adplatform.ADPlayer', 'WykOS4t4F0.cmsWebApp', '25emanual3.emanual',
     'ZODRT12q2l.WebAccountExtension', 'ByJlgt0XeD.CastSettingsApp', 'tv6pbVMQFF.PrivacyChoices'];
-  var SELF = 'nClrkHome1.FrameHome';
+  var SELF = 'w5NDRdHNPF.CleanFrame';
   function api() { return window.tizen && window.tizen.application; }
   function unavailable(done) {
     done({ message: 'Open CleanFrame on the TV to use this control.', detail: 'The web preview cannot control the TV.' });
@@ -42,7 +42,7 @@
     launchApp(IDS[brand], done);
   }
   function home(done) { launchApp('com.samsung.tv.csfs', done); }
-  function settings(done) { launchApp('com.samsung.tv.coba.setting', done); }
+  function settings(done) { launchApp('org.tizen.menu', done); }
   function apps(done) {
     if (!api()) { unavailable(done); return; }
     var finish = bounded(done);

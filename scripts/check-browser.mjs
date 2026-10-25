@@ -13,7 +13,7 @@ const UNSAFE_NAME = 'Family <img src=x onerror="window.__catalogXss=1"> & TV';
 const CATALOG = IDS.map((id, i) => ({ id, name: NAMES[i], show: true, iconPath: '' })).concat([
   { id: EXTRA, name: UNSAFE_NAME, show: true, iconPath: '' },
   { id: SPOTIFY, name: 'Spotify', show: true, iconPath: '' },
-  { id: 'nClrkHome1.FrameHome', name: 'CleanFrame', show: true },
+  { id: 'w5NDRdHNPF.CleanFrame', name: 'CleanFrame', show: true },
   { id: 'AbCdEf1234.worker', name: 'Background worker', show: true },
   { id: 'com.samsung.tv.cobalt-yt', name: 'YouTube', show: true }
 ]);
@@ -262,7 +262,7 @@ try {
     check('Samsung escape keeps CSFS target', (await current.evaluate(() => __tv.calls.at(-1))).id === 'com.samsung.tv.csfs');
     await current.evaluate(() => window.dispatchEvent(new Event('focus'))); await group('samsung'); await act('samsung.settings');
     await current.waitForFunction(() => __tv.calls.length === 4);
-    check('TV settings keeps installed target', (await current.evaluate(() => __tv.calls.at(-1))).id === 'com.samsung.tv.coba.setting');
+    check('TV settings uses the 2018 menu app', (await current.evaluate(() => __tv.calls.at(-1))).id === 'org.tizen.menu');
     await current.evaluate(() => { window.dispatchEvent(new Event('focus')); __tv.launchFailure = true; });
     await scene('home'); await act('home.app.netflix'); await current.waitForFunction(() => ShoreQA.where().view === 'message');
     check('Launch failure is shown', /could not|unavailable|try again/i.test(await current.locator('#stage').innerText()));
