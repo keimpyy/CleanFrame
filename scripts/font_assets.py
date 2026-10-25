@@ -64,10 +64,50 @@ def font_overlay(root=ROOT, include_private=True):
     return assets
 
 
-def write_widget_archive(output, root=ROOT, include_private=True):
+def wallpaper_overlay(app, wallpapers=None, photo_quality=None):
+    """Trim the gallery and re-encode full photos for a TV with little install space.
+
+    Returns (overlay, skip): replacement files and the photo files to leave out.
+    """
+    overlay, skip = {}, set()
+    if not wallpapers and not photo_quality:
+        return overlay, skip
+    prefix = 'window.CleanFrameWallpapers = '
+    catalog = (app / 'assets/wallpapers/catalog.js').read_text(encoding='utf-8')
+    header, _, body = catalog.partition(prefix)
+    walls = json.loads(body.strip().rstrip(';'))
+    ids = [w['id'] for w in walls]
+    keep = [i for i in (wallpapers or ids) if i in ids]
+    if not keep:
+        raise ValueError('None of the configured wallpapers exist: ' + ', '.join(wallpapers))
+    for wall_id in ids:
+        if wall_id in keep:
+            continue
+        skip.update(['assets/wallpapers/' + wall_id + suffix + '.jpg' for suffix in ['', '-thumb', '-panel']])
+        skip.update(['assets/materials/' + wall_id + '-' + suffix + '.jpg' for suffix in ['study-soft', 'field-blur', 'field-frost', 'field-clear']])
+    walls = [w for w in walls if w['id'] in keep]
+    overlay['assets/wallpapers/catalog.js'] = (header + prefix + json.dumps(walls, indent=2) + ';\n').encode()
+    sources = json.loads((app / 'assets/wallpapers/SOURCES.json').read_text(encoding='utf-8'))
+    overlay['assets/wallpapers/SOURCES.json'] = (json.dumps([w for w in sources if w['id'] in keep], indent=2) + '\n').encode()
+    if photo_quality:
+        from io import BytesIO
+        from PIL import Image
+        for wall_id in keep:
+            name = 'assets/wallpapers/' + wall_id + '.jpg'
+            buffer = BytesIO()
+            with Image.open(app / name) as image:
+                # Baseline, not progressive: cheaper to decode on the TV.
+                image.convert('RGB').save(buffer, 'JPEG', quality=int(photo_quality), optimize=True, progressive=False)
+            overlay[name] = buffer.getvalue()
+    return overlay, skip
+
+
+def write_widget_archive(output, root=ROOT, include_private=True, wallpapers=None, photo_quality=None):
     """Create an unsigned archive without reading signing or device settings."""
     app = root / 'app'
     overlay = font_overlay(root, include_private)
+    gallery, skip = wallpaper_overlay(app, wallpapers, photo_quality)
+    overlay.update(gallery)
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, allowZip64=False) as package:
         for source in sorted(app.rglob('*')):
             if source.is_symlink():
@@ -77,7 +117,7 @@ def write_widget_archive(output, root=ROOT, include_private=True):
             name = source.relative_to(app).as_posix()
             if name.startswith('assets/private-fonts/'):
                 raise ValueError('Private font binaries must stay in .local/, not app/.')
-            if name not in overlay and is_runtime_source(name):
+            if name not in overlay and name not in skip and is_runtime_source(name):
                 package.write(source, name)
         for name, source in sorted(overlay.items()):
             if isinstance(source, Path):

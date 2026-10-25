@@ -192,6 +192,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .bg-photo.f-type .ph-row.is-focus .ph-group,.bg-photo.f-type .ph-row.is-lifted .ph-group{opacity:1}
 .bg-photo.f-type .ph-row.k-ph .ph-group{opacity:.5}
 .ph-plate{position:absolute;z-index:1;left:112px;top:0;width:360px;height:134px;border-radius:38px;overflow:hidden;opacity:0;transition:opacity 160ms linear}
+/* Tizen 4.0 does not clip the composited photo field to the rounded plate and shows a
+   full-height bar. There the plate is a plain translucent surface instead. */
+.legacy-clip .ph-plate .ph-field{display:none}
+.legacy-clip .ph-plate{background:var(--lift);box-shadow:var(--plate-edge)}
 .ph-plate.on-focus,.ph-plate.on-lift{opacity:1}
 .ph-plate.on-sel{opacity:.5}
 .ph-plate.is-outgoing{opacity:0}

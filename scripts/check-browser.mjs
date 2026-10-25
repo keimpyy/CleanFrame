@@ -237,7 +237,7 @@ try {
   await run('Default Home and installed launch IDs', async () => {
     const HBO = 'Zz99999999.HBOMax';
     await page({ seed: { wallpaper: walls[0].id, mode: 'fixed' }, catalog: CATALOG.map(a => a.name === 'HBO Max' ? { ...a, id: HBO } : a) });
-    check('New install starts with the chosen six apps', same((await state()).dock, ['netflix', 'primevideo', 'hbomax', 'videoland', 'youtube', 'disneyplus']), (await state()).dock);
+    check('New install starts with Delta TV and the chosen six apps', same((await state()).dock, ['deltatv', 'netflix', 'primevideo', 'hbomax', 'videoland', 'youtube', 'disneyplus']), (await state()).dock);
     await current.waitForFunction(() => ShoreQA.state().catalog.loaded);
     await act('home.app.videoland'); await current.waitForFunction(() => __tv.calls.length === 1);
     check('Videoland launches the installed ID found by name', (await current.evaluate(() => __tv.calls.at(-1))).id === IDS[7]);
@@ -261,8 +261,8 @@ try {
     await current.waitForFunction(() => __tv.calls.length === 3);
     check('Samsung escape keeps CSFS target', (await current.evaluate(() => __tv.calls.at(-1))).id === 'com.samsung.tv.csfs');
     await current.evaluate(() => window.dispatchEvent(new Event('focus'))); await group('samsung'); await act('samsung.settings');
-    await current.waitForFunction(() => __tv.calls.length === 4);
-    check('TV settings uses the 2018 menu app', (await current.evaluate(() => __tv.calls.at(-1))).id === 'org.tizen.menu');
+    await current.waitForFunction(() => __tv.calls.length === 5);
+    check('TV settings opens the menu over the TV picture', same((await current.evaluate(() => __tv.calls.slice(-2).map(c => c.id))), ['org.tizen.tv-viewer', 'org.tizen.menu']));
     await current.evaluate(() => { window.dispatchEvent(new Event('focus')); __tv.launchFailure = true; });
     await scene('home'); await act('home.app.netflix'); await current.waitForFunction(() => ShoreQA.where().view === 'message');
     check('Launch failure is shown', /could not|unavailable|try again/i.test(await current.locator('#stage').innerText()));

@@ -98,7 +98,8 @@ def sign_macos():
     return output.replace(password, b'[redacted]').decode(errors='replace')
 
 
-write_widget_archive(unsigned)
+# A TV with little install space can take a smaller gallery: "wallpapers" and "photoQuality".
+write_widget_archive(unsigned, wallpapers=config.get('wallpapers'), photo_quality=config.get('photoQuality'))
 output = sign_windows() if WINDOWS else sign_macos()
 if 'is created successfully' not in output:
     print(output)

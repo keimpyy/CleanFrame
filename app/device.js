@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var IDS = {
-    netflix: 'org.tizen.netflix-app', primevideo: 'evKhCgZelL.AmazonIgnitionLauncher2',
+    deltatv: 'org.tizen.tv-viewer', netflix: 'org.tizen.netflix-app', primevideo: 'evKhCgZelL.AmazonIgnitionLauncher2',
     hbomax: 'fjpfQryJuR.HBOMaxCTV', videoland: 'WyN2wsAQHK.VideolandV2', youtube: '9Ur5IzDKqV.TizenYouTube',
     disneyplus: 'MCmYXNxgcu.DisneyPlus', appletv: 'com.samsung.tv.aria-video',
     applemusic: 'org.tizen.apple.apple-music', stremio: 'IkWsFHtOY9.Stremio'
@@ -42,7 +42,13 @@
     launchApp(IDS[brand], done);
   }
   function home(done) { launchApp('com.samsung.tv.csfs', done); }
-  function settings(done) { launchApp('org.tizen.menu', done); }
+  // The settings menu is an overlay on the TV picture; opened over CleanFrame it never gets focus.
+  function settings(done) {
+    launchApp('org.tizen.tv-viewer', function (err) {
+      if (err) { done(err); return; }
+      setTimeout(function () { launchApp('org.tizen.menu', done); }, 800);
+    });
+  }
   function apps(done) {
     if (!api()) { unavailable(done); return; }
     var finish = bounded(done);

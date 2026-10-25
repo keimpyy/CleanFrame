@@ -1,12 +1,10 @@
 """Connect, inspect, install or launch CleanFrame. These commands preserve Home/startup settings."""
 import argparse
-import hashlib
 import ipaddress
 import json
 import os
 from pathlib import Path
 import subprocess
-import time
 import xml.etree.ElementTree as XML
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,14 +51,20 @@ else:
     widget = ROOT / 'dist/CleanFrame.wgt'
     if not widget.exists():
         raise SystemExit('Run npm run package first.')
-    digest = hashlib.sha256(widget.read_bytes()).hexdigest()[:12]
-    remote = '/home/owner/share/tmp/sdk_tools/CleanFrame-' + digest + '-' + str(time.time_ns()) + '.wgt'
-    pushed = run('-s', serial, 'push', str(widget), remote)
-    if '1 file(s) pushed' not in pushed or 'failed' in pushed.lower():
-        raise SystemExit('Widget transfer was not confirmed.')
-    output = run('-s', serial, 'shell', '0', 'vd_appinstall', app_id, remote)
-    if 'install completed' not in output or 'install failed' in output:
-        raise SystemExit('TV installation failed or was not confirmed.')
+    # One fixed upload name, emptied afterwards: the TV's temporary storage is small,
+    # and leftover uploads filled it until installs failed with "download failed[116]".
+    remote = '/home/owner/share/tmp/sdk_tools/CleanFrame-upload.wgt'
+    empty = ROOT / 'dist/empty.wgt'
+    empty.write_bytes(b'')
+    try:
+        pushed = run('-s', serial, 'push', str(widget), remote)
+        if '1 file(s) pushed' not in pushed or 'failed' in pushed.lower():
+            raise SystemExit('Widget transfer was not confirmed.')
+        output = run('-s', serial, 'shell', '0', 'vd_appinstall', app_id, remote)
+        if 'install completed' not in output or 'install failed' in output or 'download failed' in output:
+            raise SystemExit('TV installation failed or was not confirmed.')
+    finally:
+        run('-s', serial, 'push', str(empty), remote, quiet=True)
     installed = run('-s', serial, 'shell', '0', 'applist', quiet=True)
     if app_id not in installed:
         raise SystemExit('App was not found in the installed-app list.')
